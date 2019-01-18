@@ -16,151 +16,188 @@ import okhttp3.Request;
 import okhttp3.Response;
 
 /**
- * Created by root on 09/06/17.
+ * Direct-share request.
+ * 
+ * @author Evgeny Bondarenko (evgbondarenko@gmail.com)
+ *
  */
-
+@Log4j
 @Builder(builderClassName = "DirectShareRequestBuilder", builderMethodName = "internalBuilder")
 public class InstagramDirectShareRequest extends InstagramRequest<StatusResult> {
+	@NonNull
+	private ShareType shareType;
+	/**
+	 * List of recipients IDs (i.e. "1234567890")
+	 */
+	private List<String> recipients;
+	/**
+	 * The thread ID to share to
+	 */
+	private String threadId;
+	/**
+	 * The media ID in instagram's internal format (ie "223322332233_22332").
+	 */
+	private String mediaId;
+	private String message;
 
-    @NonNull
-    private ShareType shareType;
-    @NonNull
-    private List<String> recipients;
-    /**
-     * The media ID in instagram's internal format (ie "223322332233_22332").
-     */
-    private String mediaId;
-    private String message;
+	@Override
+	public String getUrl() throws IllegalArgumentException {
+		String result;
+		switch (shareType) {
+		case MESSAGE:
+			result = "direct_v2/threads/broadcast/text/";
+			break;
+		case MEDIA:
+			result = "direct_v2/threads/broadcast/media_share/?media_type=photo";
+			break;
+		default:
+			throw new IllegalArgumentException("Invalid shareType parameter value: " + shareType);
+		}
+		return result;
+	}
 
-    @Override
-    public String getUrl() {
+	@Override
+	public String getMethod() {
+		return "POST";
+	}
 
-        String result;
-        switch (shareType) {
-            case MESSAGE:
-                result = "direct_v2/threads/broadcast/text/";
-                break;
-            case MEDIA:
-                result = "direct_v2/threads/broadcast/media_share/?media_type=photo";
-                break;
-            default:
-                throw new IllegalArgumentException("Invalid shareType parameter value: " + shareType);
-        }
-        return result;
+	@Override
+	public StatusResult execute() throws ClientProtocolException, IOException {
+		String recipients = "";
+		if (this.recipients != null) {
+			recipients = "\"" + String.join("\",\"", this.recipients.toArray(new String[0])) + "\"";
+		}
+		
+		List<Map<String, String>> data = new ArrayList<Map<String, String>>();
 
-    }
+		Map<String, String> map = new HashMap<String, String>();
+		if (shareType == ShareType.MEDIA) {
+			map.put("type", "form-data");
+			map.put("name", "media_id");
+			map.put("data", mediaId);
+			data.add(map);
+		}
 
-    @Override
-    public String getMethod() {
-        return "POST";
-    }
+		map = map.size() > 0 ? new HashMap<String, String>() : map;
+		map.put("type", "form-data");
+		map.put("name", "recipient_users");
+		map.put("data", "[[" + recipients + "]]");
+		data.add(map);
 
-    // Construct relevent multipart body, build request and execute it
-    @Override
-    public StatusResult execute() throws IOException {
+		map = new HashMap<String, String>();
+		map.put("type", "form-data");
+		map.put("name", "client_context");
+		map.put("data", InstagramGenericUtil.generateUuid(true));
+		data.add(map);
 
-        String recipients = "\"" + TextUtils.join("\",\"", this.recipients.toArray(new String[0])) + "\"";
-        System.out.println("NULL" + message);
-        MultipartBody body;
-        if (shareType == ShareType.MEDIA) {
-             body = new MultipartBody.Builder(api.getUuid())
-                    .addFormDataPart("media_id", mediaId)
-                    .addFormDataPart("recipient_users", "[[" + recipients + "]]")
-                    .addFormDataPart("client_context", InstagramGenericUtil.generateUuid(true))
-                    .addFormDataPart("thread_ids", "[]")
-                    .addFormDataPart("text", message.isEmpty() ? "" : message)
-                    .build();
-        } else {
-            System.out.println("EXECUTED");
-            body = new MultipartBody.Builder(api.getUuid())
-                    .addFormDataPart("recipient_users", "[[" + recipients + "]]")
-                    .addFormDataPart("client_context", InstagramGenericUtil.generateUuid(true))
-                    .addFormDataPart("thread_ids", "[]")
-                    .addFormDataPart("text", message)
-                    .build();
-            System.out.println("ELYTOI" + body.part(3).toString());
-        }
+		map = new HashMap<String, String>();
+		map.put("type", "form-data");
+		map.put("name", "thread_ids");
+		map.put("data", "[" + (threadId != null ? threadId : "") + "]");
+		data.add(map);
 
-        Request post = createHttpRequest(body);
+		map = new HashMap<String, String>();
+		map.put("type", "form-data");
+		map.put("name", "text");
+		map.put("data", message == null ? "" : message);
+		data.add(map);
 
-        Response response = api.getClient().newCall(post).execute();
-        api.setLastResponse(response);
+		HttpPost post = createHttpRequest();
+		post.setEntity(new ByteArrayEntity(buildBody(data, api.getUuid()).getBytes(StandardCharsets.UTF_8)));
 
-        int resultCode = response.code();
-        String content = response.body().string();
+		try (CloseableHttpResponse response = api.getClient().execute(post)) {
+			api.setLastResponse(response);
 
-        StatusResult result = parseResult(resultCode, content);
+			int resultCode = response.getStatusLine().getStatusCode();
+			String content = EntityUtils.toString(response.getEntity());
 
-        return result;
+			log.info("Direct-share request result: " + resultCode + ", " + content);
 
-    }
+			post.releaseConnection();
 
-    /*
-    * Builds an HTTP request using the prvided MultipartBody
-    *
-    * @param MultipartBody body The body used as the POST payload
-    * @returns Request the completed HTTP web request
-    * */
-    protected Request createHttpRequest(MultipartBody body) {
+			StatusResult result = parseResult(resultCode, content);
 
-        String url = InstagramConstants.API_URL + getUrl();
+			return result;
+		}
+	}
 
-        Request request = new Request.Builder()
-                .url(url)
-                .addHeader("User-Agent", InstagramConstants.USER_AGENT)
-                .addHeader("Connection", "keep-alive")
-                .addHeader("Proxy-Connection", "keep-alive")
-                .addHeader("Accept", "*/*")
-                .addHeader("Accept-Language", "en-US")
-                .post(body)
-                .build();
+	@Override
+	public StatusResult parseResult(int resultCode, String content) {
+		return parseJson(resultCode, content, StatusResult.class);
+	}
 
-        return request;
+	protected HttpPost createHttpRequest() {
+		String url = InstagramConstants.API_URL + getUrl();
+		log.info("Direct-share URL: " + url);
 
-    }
+		HttpPost post = new HttpPost(url);
+		post.addHeader("User-Agent", InstagramConstants.USER_AGENT);
+		post.addHeader("Connection", "keep-alive");
+		post.addHeader("Proxy-Connection", "keep-alive");
+		post.addHeader("Accept", "*/*");
+		post.addHeader("Content-Type", "multipart/form-data; boundary=" + api.getUuid());
+		post.addHeader("Accept-Language", "en-US");
+		return post;
+	}
 
-    protected void init() {
-        switch (shareType) {
-            case MEDIA:
-                if (mediaId == null || mediaId.isEmpty()) {
-                    throw new IllegalArgumentException("mediaId cannot be null or empty.");
-                }
-                break;
-            case MESSAGE:
-                if (message == null || message.isEmpty()) {
-                    throw new IllegalArgumentException("message cannot be null or empty.");
-                }
-                break;
-            default:
-                break;
-        }
-    }
+	protected String buildBody(List<Map<String, String>> bodies, String boundary) {
+		StringBuilder sb = new StringBuilder();
+		String newLine = "\r\n";
+		for (Map<String, String> b : bodies) {
+			sb.append("--").append(boundary).append(newLine).append("Content-Disposition: ").append(b.get("type"))
+					.append("; name=\"").append(b.get("name")).append("\"").append(newLine).append(newLine)
+					.append(b.get("data")).append(newLine);
+		}
+		sb.append("--").append(boundary).append("--");
+		String body = sb.toString();
 
-    public static Builder builder(ShareType shareType, List<String> recipients) {
-        Builder b = new Builder();
-        b.shareType(shareType).recipients(recipients);
-        return b;
-    }
+		log.debug("Direct-share message body: " + body);
+		return body;
+	}
 
-    public static class Builder extends DirectShareRequestBuilder {
-        Builder() {
-            super();
-        }
+	protected void init() {
+		switch (shareType) {
+		case MEDIA:
+			if (mediaId == null || mediaId.isEmpty()) {
+				throw new IllegalArgumentException("mediaId cannot be null or empty.");
+			}
+			break;
+		case MESSAGE:
+			if (message == null || message.isEmpty()) {
+				throw new IllegalArgumentException("message cannot be null or empty.");
+			}
+			break;
+		default:
+			break;
+		}
+	}
 
-        @Override
-        public InstagramDirectShareRequest build() {
-            InstagramDirectShareRequest i = super.build();
-            i.init();
-            return i;
-        }
-    }
+	public static Builder builder(ShareType shareType) {
+		Builder b = new Builder();
+		b.shareType(shareType);
+		return b;
+	}
+	
+	public static Builder builder(ShareType shareType, List<String> recipients) {
+		Builder b = new Builder();
+		b.shareType(shareType).recipients(recipients);
+		return b;
+	}
 
-    @Override
-    public StatusResult parseResult(int resultCode, String content) {
-        return parseJson(resultCode, content, StatusResult.class);
-    }
+	public static class Builder extends DirectShareRequestBuilder {
+		Builder() {
+			super();
+		}
 
-    public enum ShareType {
-        MESSAGE, MEDIA
-    }
+		@Override
+		public InstagramDirectShareRequest build() {
+			InstagramDirectShareRequest i = super.build();
+			i.init();
+			return i;
+		}
+	}
+
+	public enum ShareType {
+		MESSAGE, MEDIA
+	}
 }
