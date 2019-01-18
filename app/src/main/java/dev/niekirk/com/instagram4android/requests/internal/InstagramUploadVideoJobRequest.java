@@ -23,19 +23,19 @@ public class InstagramUploadVideoJobRequest extends InstagramRequest<StatusResul
     private String uploadUrl;
     private String uploadJob;
     private File videoFile;
-    
+
     public String getUrl() {
         return this.uploadUrl;
     }
-    
+
     public String getMethod() {
         return "POST";
     }
-    
-    
+
+
     private Request createHTTPRequest()
     {
-        
+
         return (new okhttp3.Request.Builder()).url(this.getUrl())
                 .addHeader("X-IG-Capabilities", "3Q4=")
                 .addHeader("X-IG-Connection-Type", "WIFI")
@@ -50,7 +50,7 @@ public class InstagramUploadVideoJobRequest extends InstagramRequest<StatusResul
                 .post(createRequestBody())
                 .build();
     }
-    
+
     private RequestBody createRequestBody()
     {
         return new MultipartBody.Builder()
@@ -59,35 +59,35 @@ public class InstagramUploadVideoJobRequest extends InstagramRequest<StatusResul
                          RequestBody.create(MediaType.parse("video/mp4"), videoFile)
                 ).build();
     }
-    
+
     public StatusResult execute() throws IOException
     {
-        
+
         String url = getUrl();
         Log.i(TAG, "Upload URL: " + url);
         Response response = this.api.getClient().newCall(createHTTPRequest()).execute();
-        
+
         this.api.setLastResponse(response);
         int resultCode = response.code();
-        
+
         String content = response.body().string();
         Log.d(TAG, "MultiPart upload results: [" + resultCode + "] " + content);
-        
+
         if (resultCode != 200 && resultCode != 201) {
             throw new IllegalStateException("Failed uploading video (" + resultCode + "): " + content);
         }
         return new StatusResult("ok");
     }
-    
+
     public String getPayload() {
         return null;
     }
-    
+
     public StatusResult parseResult(int statusCode, String content) {
         return (StatusResult)this.parseJson(statusCode, content, StatusResult.class);
     }
-    
-    public UploadVideoJobRequest(String uploadId, String uploadUrl, String uploadJob, File videoFile) {
+
+    public void UploadVideoJobRequest(String uploadId, String uploadUrl, String uploadJob, File videoFile) {
         this.uploadId = uploadId;
         this.uploadUrl = uploadUrl;
         this.uploadJob = uploadJob;
