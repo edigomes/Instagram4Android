@@ -36,7 +36,7 @@ public class InstagramDirectShareRequest extends InstagramRequest<StatusResult> 
      * The media ID in instagram's internal format (ie "223322332233_22332").
      */
     private String mediaId;
-    private File imageFile;
+    private InputStream imageInput;
     private String message;
 
     @Override
@@ -86,7 +86,7 @@ public class InstagramDirectShareRequest extends InstagramRequest<StatusResult> 
 
             String uploadId = String.valueOf(System.currentTimeMillis());
 
-            InputStream in = new FileInputStream(imageFile);
+            InputStream in = imageInput;
             byte[] buf;
             buf = new byte[in.available()];
             while (in.read(buf) != -1);
@@ -170,8 +170,8 @@ public class InstagramDirectShareRequest extends InstagramRequest<StatusResult> 
                 }
                 break;
             case PHOTO:
-                if (imageFile == null || !imageFile.exists()) {
-                    throw new IllegalArgumentException("imageFile cannot be null or not exists.");
+                if (imageInput == null) {
+                    throw new IllegalArgumentException("imageInput cannot be null or not exists.");
                 }
                 break;
             default:
