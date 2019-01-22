@@ -106,19 +106,18 @@ public class InstagramUploadPhotoRequest extends InstagramRequest<InstagramConfi
         builder.addTextBody("image_compression", "{\"lib_name\":\"jt\",\"lib_version\":\"1.3.0\",\"quality\":\"87\"}");
         builder.addBinaryBody("photo", imageFile, ContentType.APPLICATION_OCTET_STREAM, "pending_media_" + uploadId + ".jpg");
         builder.setBoundary(api.getUuid());
-
         HttpEntity entity = builder.build();
         return entity;
         */
 
         MultipartBody body = new MultipartBody.Builder(api.getUuid())
-                .setType(MultipartBody.FORM)
-                .addFormDataPart("upload_id", uploadId)
-                .addFormDataPart("_uuid", api.getUuid())
-                .addFormDataPart("_csfrtoken", api.getOrFetchCsrf(null))
-                .addFormDataPart("image_compression", "{\"lib_name\":\"jt\",\"lib_version\":\"1.3.0\",\"quality\":\"87\"}")
-                .addFormDataPart("photo", "pending_media_" + uploadId + ".jpg", RequestBody.create(MediaType.parse("application/octet-stream"), imageFile))
-                .build();
+            .setType(MultipartBody.FORM)
+            .addFormDataPart("upload_id", uploadId)
+            .addFormDataPart("_uuid", api.getUuid())
+            .addFormDataPart("_csfrtoken", api.getOrFetchCsrf(null))
+            .addFormDataPart("image_compression", "{\"lib_name\":\"jt\",\"lib_version\":\"1.3.0\",\"quality\":\"87\"}")
+            .addFormDataPart("photo", "pending_media_" + uploadId + ".jpg", RequestBody.create(MediaType.parse("application/octet-stream"), imageFile))
+            .build();
 
         return body;
     }
@@ -145,16 +144,16 @@ public class InstagramUploadPhotoRequest extends InstagramRequest<InstagramConfi
         */
 
         return new Request.Builder()
-                .url(url)
-                .addHeader("X-IG-Capabilities", "3Q4=")
-                .addHeader("X-IG-Connection-Type", "WIFI")
-                .addHeader("Cookie2", "$Version=1")
-                .addHeader("Accept-Language", "en-US")
-                .addHeader("Accept-Encoding", "gzip, deflate")
-                .addHeader("Connection", "close")
-                .addHeader("User-Agent", InstagramConstants.USER_AGENT)
-                .post(body)
-                .build();
+            .url(url)
+            .addHeader("X-IG-Capabilities", "3Q4=")
+            .addHeader("X-IG-Connection-Type", "WIFI")
+            .addHeader("Cookie2", "$Version=1")
+            .addHeader("Accept-Language", "en-US")
+            .addHeader("Accept-Encoding", "gzip, deflate")
+            .addHeader("Connection", "close")
+            .addHeader("User-Agent", InstagramConstants.USER_AGENT)
+            .post(body)
+            .build();
 
     }
 

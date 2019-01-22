@@ -6,13 +6,19 @@ import dev.niekirk.com.instagram4android.InstagramConstants;
 import dev.niekirk.com.instagram4android.requests.payload.StatusResult;
 import dev.niekirk.com.instagram4android.util.InstagramGenericUtil;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 
 import lombok.Builder;
 import lombok.NonNull;
+import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.Request;
+import okhttp3.RequestBody;
 import okhttp3.Response;
 
 /**
@@ -30,6 +36,7 @@ public class InstagramDirectShareRequest extends InstagramRequest<StatusResult> 
      * The media ID in instagram's internal format (ie "223322332233_22332").
      */
     private String mediaId;
+    private File imageFile;
     private String message;
 
     @Override
@@ -42,6 +49,9 @@ public class InstagramDirectShareRequest extends InstagramRequest<StatusResult> 
                 break;
             case MEDIA:
                 result = "direct_v2/threads/broadcast/media_share/?media_type=photo";
+                break;
+            case PHOTO:
+                result = "direct_v2/threads/broadcast/upload_photo/";
                 break;
             default:
                 throw new IllegalArgumentException("Invalid shareType parameter value: " + shareType);
@@ -61,18 +71,39 @@ public class InstagramDirectShareRequest extends InstagramRequest<StatusResult> 
 
         String recipients = "\"" + TextUtils.join("\",\"", this.recipients.toArray(new String[0])) + "\"";
         System.out.println("NULL" + message);
+
         MultipartBody body;
         if (shareType == ShareType.MEDIA) {
-             body = new MultipartBody.Builder(api.getUuid())
-                    .setType(MultipartBody.FORM)
-                    .addFormDataPart("media_id", mediaId)
-                    .addFormDataPart("recipient_users", "[[" + recipients + "]]")
-                    .addFormDataPart("client_context", InstagramGenericUtil.generateUuid(true))
-                    .addFormDataPart("thread_ids", "[]")
-                    .addFormDataPart("text", message.isEmpty() ? "" : message)
-                    .build();
+            body = new MultipartBody.Builder(api.getUuid())
+                .setType(MultipartBody.FORM)
+                .addFormDataPart("media_id", mediaId)
+                .addFormDataPart("recipient_users", "[[" + recipients + "]]")
+                .addFormDataPart("client_context", InstagramGenericUtil.generateUuid(true))
+                .addFormDataPart("thread_ids", "[]")
+                .addFormDataPart("text", message.isEmpty() ? "" : message)
+                .build();
+        } else if (shareType == ShareType.PHOTO) {
+
+            String uploadId = String.valueOf(System.currentTimeMillis());
+
+            InputStream in = new FileInputStream(imageFile);
+            byte[] buf;
+            buf = new byte[in.available()];
+            while (in.read(buf) != -1);
+
+            body = new MultipartBody.Builder(api.getUuid())
+                .setType(MultipartBody.FORM)
+                .addFormDataPart("recipient_users", "[[" + recipients + "]]")
+                .addFormDataPart("client_context", InstagramGenericUtil.generateUuid(true))
+                .addFormDataPart("thread_ids", "[]")
+                .addFormDataPart("text", message.isEmpty() ? "" : message)
+                //.addFormDataPart("photo", message.isEmpty() ? "" : message)
+                // $request->addFile('photo', $options['filepath'], 'direct_temp_photo_'.Utils::generateUploadId().'.jpg');
+                .addFormDataPart("photo", "direct_temp_photo_" + uploadId + ".jpg", RequestBody.create(MediaType.parse("application/octet-stream"), buf))
+                .build();
+                //
         } else {
-            System.out.println("EXECUTED");
+            System.out.println("EXECUTED...");
             /*body = new MultipartBody.Builder(api.getUuid())
                     .addFormDataPart("recipient_users", "[[" + recipients + "]]")
                     .addFormDataPart("client_context", InstagramGenericUtil.generateUuid(true))
@@ -80,11 +111,11 @@ public class InstagramDirectShareRequest extends InstagramRequest<StatusResult> 
                     .addFormDataPart("text", message)
                     .build();*/
             body = new MultipartBody.Builder(api.getUuid())
-                    .setType(MultipartBody.FORM)
-                    .addFormDataPart("recipient_users", "[[" + recipients + "]]")
-                    .addFormDataPart("client_context", InstagramGenericUtil.generateUuid(true))
-                    .addFormDataPart("thread_ids", "[]")
-                    .addFormDataPart("text", message).build();
+                .setType(MultipartBody.FORM)
+                .addFormDataPart("recipient_users", "[[" + recipients + "]]")
+                .addFormDataPart("client_context", InstagramGenericUtil.generateUuid(true))
+                .addFormDataPart("thread_ids", "[]")
+                .addFormDataPart("text", message).build();
             System.out.println("ELYTOI" + body.part(3).toString());
         }
 
@@ -103,24 +134,24 @@ public class InstagramDirectShareRequest extends InstagramRequest<StatusResult> 
     }
 
     /*
-    * Builds an HTTP request using the prvided MultipartBody
-    *
-    * @param MultipartBody body The body used as the POST payload
-    * @returns Request the completed HTTP web request
-    * */
+     * Builds an HTTP request using the prvided MultipartBody
+     *
+     * @param MultipartBody body The body used as the POST payload
+     * @returns Request the completed HTTP web request
+     * */
     protected Request createHttpRequest(MultipartBody body) {
 
         String url = InstagramConstants.API_URL + getUrl();
 
         Request request = new Request.Builder()
-                .url(url)
-                .addHeader("User-Agent", InstagramConstants.USER_AGENT)
-                .addHeader("Connection", "keep-alive")
-                .addHeader("Proxy-Connection", "keep-alive")
-                .addHeader("Accept", "*/*")
-                .addHeader("Accept-Language", "en-US")
-                .post(body)
-                .build();
+            .url(url)
+            .addHeader("User-Agent", InstagramConstants.USER_AGENT)
+            .addHeader("Connection", "keep-alive")
+            .addHeader("Proxy-Connection", "keep-alive")
+            .addHeader("Accept", "*/*")
+            .addHeader("Accept-Language", "en-US")
+            .post(body)
+            .build();
 
         return request;
 
@@ -136,6 +167,11 @@ public class InstagramDirectShareRequest extends InstagramRequest<StatusResult> 
             case MESSAGE:
                 if (message == null || message.isEmpty()) {
                     throw new IllegalArgumentException("message cannot be null or empty.");
+                }
+                break;
+            case PHOTO:
+                if (imageFile == null || !imageFile.exists()) {
+                    throw new IllegalArgumentException("imageFile cannot be null or not exists.");
                 }
                 break;
             default:
@@ -168,6 +204,6 @@ public class InstagramDirectShareRequest extends InstagramRequest<StatusResult> 
     }
 
     public enum ShareType {
-        MESSAGE, MEDIA
+        MESSAGE, MEDIA, PHOTO
     }
 }
