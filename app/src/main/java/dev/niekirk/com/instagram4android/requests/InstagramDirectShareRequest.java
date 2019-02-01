@@ -38,6 +38,7 @@ public class InstagramDirectShareRequest extends InstagramRequest<StatusResult> 
     private String mediaId;
     private InputStream imageInput;
     private String message;
+    private List<String> linkUrls;
 
     @Override
     public String getUrl() {
@@ -104,18 +105,27 @@ public class InstagramDirectShareRequest extends InstagramRequest<StatusResult> 
                 //
         } else {
             System.out.println("EXECUTED...");
-            /*body = new MultipartBody.Builder(api.getUuid())
+            if (this.linkUrls != null) {
+
+                String links = "\"" + TextUtils.join("\",\"", this.linkUrls.toArray(new String[0])) + "\"";
+
+                body = new MultipartBody.Builder(api.getUuid())
+                    .setType(MultipartBody.FORM)
                     .addFormDataPart("recipient_users", "[[" + recipients + "]]")
                     .addFormDataPart("client_context", InstagramGenericUtil.generateUuid(true))
                     .addFormDataPart("thread_ids", "[]")
-                    .addFormDataPart("text", message)
-                    .build();*/
-            body = new MultipartBody.Builder(api.getUuid())
-                .setType(MultipartBody.FORM)
-                .addFormDataPart("recipient_users", "[[" + recipients + "]]")
-                .addFormDataPart("client_context", InstagramGenericUtil.generateUuid(true))
-                .addFormDataPart("thread_ids", "[]")
-                .addFormDataPart("text", message).build();
+                    .addFormDataPart("link_urls", "[[" + links + "]]")
+                    .addFormDataPart("link_text", message).build();
+
+            } else {
+                body = new MultipartBody.Builder(api.getUuid())
+                    .setType(MultipartBody.FORM)
+                    .addFormDataPart("recipient_users", "[[" + recipients + "]]")
+                    .addFormDataPart("client_context", InstagramGenericUtil.generateUuid(true))
+                    .addFormDataPart("thread_ids", "[]")
+                    .addFormDataPart("text", message).build();
+            }
+
             System.out.println("ELYTOI" + body.part(3).toString());
         }
 
