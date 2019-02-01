@@ -115,7 +115,7 @@ public class InstagramDirectShareRequest extends InstagramRequest<StatusResult> 
                     .addFormDataPart("recipient_users", "[[" + recipients + "]]")
                     .addFormDataPart("client_context", InstagramGenericUtil.generateUuid(true))
                     .addFormDataPart("thread_ids", "[]")
-                    .addFormDataPart("link_urls", "[\"" + links + "\"]")
+                    .addFormDataPart("link_urls", "[" + links + "]")
                     .addFormDataPart("link_text", message).build();
 
             } else {
