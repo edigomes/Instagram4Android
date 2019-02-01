@@ -46,7 +46,8 @@ public class InstagramDirectShareRequest extends InstagramRequest<StatusResult> 
         String result;
         switch (shareType) {
             case MESSAGE:
-                result = "direct_v2/threads/broadcast/text/";
+                //result = "direct_v2/threads/broadcast/text/";
+                result = "direct_v2/threads/broadcast/link/";
                 break;
             case MEDIA:
                 result = "direct_v2/threads/broadcast/media_share/?media_type=photo";
