@@ -46,7 +46,9 @@ public class InstagramDirectShareRequest extends InstagramRequest<StatusResult> 
         String result;
         switch (shareType) {
             case MESSAGE:
-                //result = "direct_v2/threads/broadcast/text/";
+                result = "direct_v2/threads/broadcast/text/";
+                break;
+            case LINK:
                 result = "direct_v2/threads/broadcast/link/";
                 break;
             case MEDIA:
@@ -180,6 +182,11 @@ public class InstagramDirectShareRequest extends InstagramRequest<StatusResult> 
                     throw new IllegalArgumentException("message cannot be null or empty.");
                 }
                 break;
+            case LINK:
+                if (message == null || message.isEmpty() || linkUrls.isEmpty()) {
+                    throw new IllegalArgumentException("links cannot be null or empty.");
+                }
+                break;
             case PHOTO:
                 if (imageInput == null) {
                     throw new IllegalArgumentException("imageInput cannot be null or not exists.");
@@ -215,6 +222,6 @@ public class InstagramDirectShareRequest extends InstagramRequest<StatusResult> 
     }
 
     public enum ShareType {
-        MESSAGE, MEDIA, PHOTO
+        MESSAGE, MEDIA, PHOTO, LINK
     }
 }
