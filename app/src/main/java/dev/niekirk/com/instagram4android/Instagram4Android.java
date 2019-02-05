@@ -1,7 +1,12 @@
 package dev.niekirk.com.instagram4android;
 
+import android.content.Context;
 import android.text.TextUtils;
 import android.util.Log;
+
+import com.franmontiel.persistentcookiejar.PersistentCookieJar;
+import com.franmontiel.persistentcookiejar.cache.SetCookieCache;
+import com.franmontiel.persistentcookiejar.persistence.SharedPrefsCookiePersistor;
 
 import dev.niekirk.com.instagram4android.requests.InstagramAutoCompleteUserListRequest;
 import dev.niekirk.com.instagram4android.requests.InstagramFbLoginRequest;
@@ -75,11 +80,15 @@ public class Instagram4Android {
     @Getter @Setter
     protected HashMap<String, Cookie> cookieStore = new HashMap<>();
 
+    @Getter @Setter
+    protected Context mContext;
+
     @Builder
-    public Instagram4Android(String username, String password) {
+    public Instagram4Android(String username, String password, Context mContext) {
         super();
         this.username = username;
         this.password = password;
+        this.mContext = mContext;
     }
 
     /**
@@ -114,7 +123,7 @@ public class Instagram4Android {
         this.deviceId = InstagramHashUtil.generateDeviceId(this.username, this.password);
         this.uuid = InstagramGenericUtil.generateUuid(true);
 
-        client = new OkHttpClient.Builder()
+        /*client = new OkHttpClient.Builder()
                 .cookieJar(new CookieJar() {
 
                     @Override
@@ -138,7 +147,13 @@ public class Instagram4Android {
                         return validCookies;
                     }
                 })
-                .build();
+                .build();*/
+
+        CookieJar cookieJar = new PersistentCookieJar(new SetCookieCache(), new SharedPrefsCookiePersistor(mContext));
+
+        client = new OkHttpClient.Builder()
+            .cookieJar(cookieJar)
+            .build();
 
     }
 
