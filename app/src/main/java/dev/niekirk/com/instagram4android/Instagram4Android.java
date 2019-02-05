@@ -72,8 +72,8 @@ public class Instagram4Android {
     @Getter
     protected OkHttpClient client;
 
-    @Getter
-    protected CookieStore cookieStore;
+    @Getter @Setter
+    protected HashMap<String, Cookie> cookieStore = new HashMap<>();
 
     @Builder
     public Instagram4Android(String username, String password) {
@@ -90,7 +90,7 @@ public class Instagram4Android {
      * @param cookieStore Cookie Store
      */
     @Builder
-    public Instagram4Android(String username, String password, long userId, String uuid, CookieStore cookieStore) {
+    public Instagram4Android(String username, String password, long userId, String uuid, HashMap<String, Cookie> cookieStore) {
         super();
         this.username = username;
         this.password = password;
