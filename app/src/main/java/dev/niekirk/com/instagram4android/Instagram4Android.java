@@ -91,14 +91,13 @@ public class Instagram4Android {
     }
 
     @Builder
-    public Instagram4Android(String username, String password, String uuid, Context mContext) {
+    public Instagram4Android(String username, String password, String uuid, HashMap<String, Cookie> cookieStore) {
         super();
-        this.username = username;
-        this.password = password;
-        this.mContext = mContext;
-        //this.userId = userId;
-        this.uuid = uuid;
-        this.isLoggedIn = true;
+        this.username       = username;
+        this.password       = password;
+        this.uuid           = uuid;
+        this.cookieStore    = cookieStore;
+        this.isLoggedIn     = true;
     }
 
     public void setup() {
@@ -115,7 +114,7 @@ public class Instagram4Android {
         this.deviceId = InstagramHashUtil.generateDeviceId(this.username, this.password);
         this.uuid = InstagramGenericUtil.generateUuid(true);
 
-        /*client = new OkHttpClient.Builder()
+        client = new OkHttpClient.Builder()
                 .cookieJar(new CookieJar() {
 
                     @Override
@@ -139,13 +138,13 @@ public class Instagram4Android {
                         return validCookies;
                     }
                 })
-                .build();*/
+                .build();
 
-        CookieJar cookieJar = new PersistentCookieJar(new SetCookieCache(), new SharedPrefsCookiePersistor(mContext));
+        /*CookieJar cookieJar = new PersistentCookieJar(new SetCookieCache(), new SharedPrefsCookiePersistor(mContext));
 
         client = new OkHttpClient.Builder()
             .cookieJar(cookieJar)
-            .build();
+            .build();*/
 
     }
 
@@ -205,6 +204,7 @@ public class Instagram4Android {
                 .build();
 
         InstagramLoginResult loginResult = this.sendRequest(new InstagramLoginRequest(loginRequest));
+
         if (loginResult.getStatus().equalsIgnoreCase("ok")) {
             this.userId = loginResult.getLogged_in_user().getPk();
             this.rankToken = this.userId + "_" + this.uuid;
@@ -246,7 +246,7 @@ public class Instagram4Android {
 
         for(Cookie cookie: client.cookieJar().loadForRequest(url)) {
 
-//            Log.d("GETCOOKIE", "Name: " + cookie.name());
+            Log.d("GETCOOKIE", "Name: " + cookie.name());
             if(cookie.name().equalsIgnoreCase("csrftoken")) {
                 return cookie;
             }
