@@ -56,7 +56,7 @@ public class Instagram4Android {
     @Getter
     protected boolean isLoggedIn;
 
-    @Getter
+    @Getter @Setter
     private String uuid;
 
     @Getter @Setter
