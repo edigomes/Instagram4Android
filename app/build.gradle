@@ -44,4 +44,5 @@ dependencies {
     )
     compile 'com.squareup.okhttp3:okhttp:3.12.1'
     compile 'com.writingminds:FFmpegAndroid:0.3.2'
+    compile 'com.github.franmontiel:PersistentCookieJar:v1.0.1'
 }
