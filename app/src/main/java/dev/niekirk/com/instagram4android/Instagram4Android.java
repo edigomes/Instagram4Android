@@ -71,7 +71,8 @@ public class Instagram4Android {
     @Getter
     protected OkHttpClient client;
 
-    private final HashMap<String, Cookie> cookieStore = new HashMap<>();
+    @Getter @Setter
+    protected HashMap<String, Cookie> cookieStore = new HashMap<>();
 
     @Builder
     public Instagram4Android(String username, String password) {
