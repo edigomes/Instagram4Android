@@ -21,6 +21,7 @@ import dev.niekirk.com.instagram4android.util.InstagramHashUtil;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.net.CookieStore;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -71,14 +72,32 @@ public class Instagram4Android {
     @Getter
     protected OkHttpClient client;
 
-    @Getter @Setter
-    protected HashMap<String, Cookie> cookieStore = new HashMap<>();
+    @Getter
+    protected CookieStore cookieStore;
 
     @Builder
     public Instagram4Android(String username, String password) {
         super();
         this.username = username;
         this.password = password;
+    }
+
+    /**
+     * @param username Username
+     * @param password Password
+     * @param userId UserId
+     * @param uuid UUID
+     * @param cookieStore Cookie Store
+     */
+    @Builder
+    public Instagram4Android(String username, String password, long userId, String uuid, CookieStore cookieStore) {
+        super();
+        this.username = username;
+        this.password = password;
+        this.userId = userId;
+        this.uuid = uuid;
+        this.cookieStore = cookieStore;
+        this.isLoggedIn = true;
     }
 
     public void setup() {
