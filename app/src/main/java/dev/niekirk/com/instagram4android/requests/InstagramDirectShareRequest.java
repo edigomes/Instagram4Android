@@ -36,7 +36,7 @@ public class InstagramDirectShareRequest extends InstagramRequest<StatusResult> 
      * The media ID in instagram's internal format (ie "223322332233_22332").
      */
     private String mediaId;
-    private InputStream imageInput;
+    private File imgFile;
     private String message;
     private List<String> linkUrls;
 
@@ -90,11 +90,6 @@ public class InstagramDirectShareRequest extends InstagramRequest<StatusResult> 
 
             String uploadId = String.valueOf(System.currentTimeMillis());
 
-            InputStream in = imageInput;
-            byte[] buf;
-            buf = new byte[in.available()];
-            while (in.read(buf) != -1);
-
             body = new MultipartBody.Builder(api.getUuid())
                 .setType(MultipartBody.FORM)
                 .addFormDataPart("recipient_users", "[[" + recipients + "]]")
@@ -103,7 +98,7 @@ public class InstagramDirectShareRequest extends InstagramRequest<StatusResult> 
                 .addFormDataPart("text", message.isEmpty() ? "" : message)
                 //.addFormDataPart("photo", message.isEmpty() ? "" : message)
                 // $request->addFile('photo', $options['filepath'], 'direct_temp_photo_'.Utils::generateUploadId().'.jpg');
-                .addFormDataPart("photo", "direct_temp_photo_" + uploadId + ".jpg", RequestBody.create(MediaType.parse("application/octet-stream"), buf))
+                .addFormDataPart("photo", "direct_temp_photo_" + uploadId + ".jpg", RequestBody.create(MediaType.parse("image/jpeg"), imgFile))
                 .build();
                 //
         } else {
@@ -188,7 +183,7 @@ public class InstagramDirectShareRequest extends InstagramRequest<StatusResult> 
                 }
                 break;
             case PHOTO:
-                if (imageInput == null) {
+                if (imgFile == null || !imgFile.isFile()) {
                     throw new IllegalArgumentException("imageInput cannot be null or not exists.");
                 }
                 break;
