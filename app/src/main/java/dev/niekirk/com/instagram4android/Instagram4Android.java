@@ -1,6 +1,8 @@
 package dev.niekirk.com.instagram4android;
 
 import android.content.Context;
+import android.os.Build;
+import android.support.annotation.RequiresApi;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -31,6 +33,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import lombok.Builder;
 import lombok.Getter;
@@ -90,15 +93,14 @@ public class Instagram4Android {
         this.password = password;
     }
 
-    @Builder
-    public Instagram4Android(String username, String password, String uuid, HashMap<String, Cookie> cookieStore) {
+    /*@Builder
+    public Instagram4Android(String username, String password, Context mContext) {
         super();
         this.username       = username;
         this.password       = password;
-        this.uuid           = uuid;
-        this.cookieStore    = cookieStore;
+        this.mContext       = mContext;
         this.isLoggedIn     = true;
-    }
+    }*/
 
     public void setup() {
 
