@@ -1,5 +1,7 @@
 package dev.niekirk.com.instagram4android.requests.payload;
 
+import android.support.annotation.Nullable;
+
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;

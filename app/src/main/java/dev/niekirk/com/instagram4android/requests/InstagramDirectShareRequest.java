@@ -3,6 +3,7 @@ package dev.niekirk.com.instagram4android.requests;
 import android.text.TextUtils;
 
 import dev.niekirk.com.instagram4android.InstagramConstants;
+import dev.niekirk.com.instagram4android.requests.payload.InstagramBroadcastTextResult;
 import dev.niekirk.com.instagram4android.requests.payload.StatusResult;
 import dev.niekirk.com.instagram4android.util.InstagramGenericUtil;
 
@@ -26,7 +27,7 @@ import okhttp3.Response;
  */
 
 @Builder(builderClassName = "DirectShareRequestBuilder", builderMethodName = "internalBuilder")
-public class InstagramDirectShareRequest extends InstagramRequest<StatusResult> {
+public class InstagramDirectShareRequest extends InstagramRequest<InstagramBroadcastTextResult> {
 
     @NonNull
     private ShareType shareType;
@@ -71,7 +72,7 @@ public class InstagramDirectShareRequest extends InstagramRequest<StatusResult> 
 
     // Construct relevent multipart body, build request and execute it
     @Override
-    public StatusResult execute() throws IOException {
+    public InstagramBroadcastTextResult execute() throws IOException {
 
         String recipients = "\"" + TextUtils.join("\",\"", this.recipients.toArray(new String[0])) + "\"";
         System.out.println("NULL" + message);
@@ -135,7 +136,7 @@ public class InstagramDirectShareRequest extends InstagramRequest<StatusResult> 
         int resultCode = response.code();
         String content = response.body().string();
 
-        StatusResult result = parseResult(resultCode, content);
+        InstagramBroadcastTextResult result = parseResult(resultCode, content);
 
         return result;
 
@@ -212,8 +213,8 @@ public class InstagramDirectShareRequest extends InstagramRequest<StatusResult> 
     }
 
     @Override
-    public StatusResult parseResult(int resultCode, String content) {
-        return parseJson(resultCode, content, StatusResult.class);
+    public InstagramBroadcastTextResult parseResult(int resultCode, String content) {
+        return parseJson(resultCode, content, InstagramBroadcastTextResult.class);
     }
 
     public enum ShareType {
